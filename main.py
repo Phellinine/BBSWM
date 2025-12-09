@@ -6,6 +6,7 @@ from time import sleep
 import API
 import GUI
 import config as conf
+import desktop_message
 
 api_p_log = API.Players([])
 
@@ -21,6 +22,7 @@ def loop_main(interval: int, update_ratio: int) -> None:
 
 
 if __name__ == '__main__':
+    desktop_message.simple("BBSWM", "Starting BBSWM")
     API.Message(API.TYPE["start"])
     API.Players.update_log(api_p_log)
     while GUI.run:
@@ -36,4 +38,5 @@ if __name__ == '__main__':
             f.close()
     API.Players.close_log(api_p_log)
 
+    desktop_message.simple("BBSWM", "Closed BBSWM")
     API.Message(API.TYPE["quit"])

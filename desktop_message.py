@@ -11,6 +11,6 @@ def simple(title, message):
     notifier = DesktopNotifier()
 
     async def main():
-        await notifier.send(title=message, message=title)
+        await notifier.send(title=title, message=message)
 
     asyncio.run(main())
