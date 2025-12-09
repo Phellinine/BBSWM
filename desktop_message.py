@@ -11,6 +11,6 @@ def simple(title, message):
     notifier = DesktopNotifier()
 
     async def main():
-        await notifier.send(title=message, message=title, icon=Icon(uri=config.icon_path))
+        await notifier.send(title=message, message=title)
 
     asyncio.run(main())
