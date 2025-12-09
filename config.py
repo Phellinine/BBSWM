@@ -11,7 +11,7 @@ log_path = "logs/"
 log_full = log_path + log_file
 
 NC = nextcloud_client.Client('https://gmb-cloud.wiesan.de')
-nc_path = "./Minecraft mit detti/server player logs"
+nc_path = "./Minecraft mit Dettweiler/server player logs"
 
 plog_scale_width = 0.5
 plog_scale_height = 50
