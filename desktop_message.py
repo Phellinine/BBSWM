@@ -4,7 +4,7 @@ from desktop_notifier import DesktopNotifier, Icon
 import config
 
 
-# notifier = DesktopNotifier()
+
 
 
 def simple(title, message):
