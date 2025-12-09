@@ -2,8 +2,6 @@ import json
 import tkinter as tk
 from tkinter import ttk
 from typing import Any
-import pandas as pd
-from datetime import datetime, date, timedelta
 
 import config as conf
 
