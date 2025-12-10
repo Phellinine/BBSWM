@@ -17,3 +17,6 @@ plog_scale_width = 0.5
 plog_scale_height = 50
 
 icon_path = './assets/BBSWM_icon.png'
+
+style_path = './configs/UI.json'
+style = "dark"

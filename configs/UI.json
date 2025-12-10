@@ -1,0 +1,13 @@
+{
+  "style":{
+    "dark": {
+      "buttons": {
+        "padding": 56,
+        "relief": "flat",
+        "bg": [["active", "#050505"], ["hover", ""], ["pressed", ""]],
+        "fg": [["active", "#050505"], ["hover", ""], ["pressed", ""]],
+        "font": ["JetBrainsMono", 12]
+      }
+    }
+  }
+}
