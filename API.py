@@ -101,14 +101,6 @@ class Message:
             f.write(f"{traceback.format_exc()}{"\n" * 2}")
             f.close()
 
-        # except FileNotFoundError:
-        #     ini.norm_log()
-        #     with open(conf.log_full, "a") as f:
-        #         f.write(
-        #             f"{self.md_severe}{self.timestamp} [fatal]:    " +
-        #             f"{self.error_description}{self.md_severe_end}{"\n" * 2}")
-        #         f.write(f"{traceback.format_exc()}{"\n" * 2}")
-        #         f.close()
 
     def warning(self) -> None:
         """
@@ -127,13 +119,6 @@ class Message:
             f.write(f"{self.md_message}{traceback.format_exc(limit=4)}{self.md_message_end}{"\n" * 2}")
             f.close()
 
-        # except FileNotFoundError:
-        #     ini.norm_log()
-        #     with open(conf.log_full, "a") as f:
-        #         f.write(
-        #             f"{self.md_warn}{self.timestamp} [warn]:    {self.error_description}{self.md_warn_end}{"\n" * 2}")
-        #         f.write(f"{self.md_message}{traceback.format_exc(limit=4)}{self.md_message_end}{"\n" * 2}")
-        #         f.close()
 
     def weak_warning(self) -> None:
         """
@@ -162,13 +147,6 @@ class Message:
                 f"{self.error_description}{self.md_message_end}{"\n" * 2}")
             f.close()
 
-        # except FileNotFoundError:
-        #     ini.norm_log()
-        #     with open(conf.log_full, "a") as f:
-        #         f.write(
-        #             f"{self.md_message}{self.timestamp}[info]:    " +
-        #             f"{self.error_description}{self.md_message_end}{"\n" * 2}")
-        #         f.close()
 
     def send(self) -> None:
         try:
