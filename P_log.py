@@ -1,9 +1,13 @@
 import json
+import os
+import tkinter
 import tkinter as tk
 from tkinter import ttk
 from typing import Any
 
 import config as conf
+
+path_logs = conf.player_log_path
 
 x = '1000'
 y = '500'
@@ -12,11 +16,9 @@ space_y = "+100"
 
 # create window
 p_log = tk.Tk()
-p_log.title("BBSWM -- Player Logs")  # -B-lock für -B-lock -S-erver -W-ork -M-anager
+p_log.title("BBSWM -- Player Log")  # -B-lock für -B-lock -S-erver -W-ork -M-anager
 p_log.geometry(x + 'x' + y + space_x + space_y)
 
-frame = ttk.Frame(p_log)
-frame.pack(padx=10, pady=10, fill="both", expand=True)
 
 def gettime_real(time_dec: int):
     h_real = str(time_dec)[0:2]
@@ -35,27 +37,55 @@ def gettime_dec(time_dec):
     time_dec = int(h_dec + min_dec)
     return time_dec
 
+def quick_choose(window):
+    def done_cmd(selection: str) -> None:
+        for widget in window.winfo_children():
+            widget.destroy()
+
+        safe_build(path_logs+selection, window)
+
+    toplevel = tk.Toplevel(window)
+    label = tk.Label(toplevel, text="Choose File")
+    label.pack(anchor="n")
+    path_label = tk.Label(toplevel, text=os.path.abspath(path_logs))
+    path_label.pack(anchor="n")
+    listbox = tk.Listbox(toplevel)
+    for file in os.listdir(path_logs):
+        listbox.insert(tk.END, file)
+    listbox.pack()
+    done = tk.Button(toplevel, text="Done", command=lambda command=done_cmd: done_cmd(listbox.selection_get()))
+    done.pack(anchor="sw")
+    close = tk.Button(toplevel, text="Exit", command=toplevel.destroy)
+    close.pack(anchor="se")
+    toplevel.mainloop()
 
 
+def build(file: str, window: tk.Tk) -> None:
+    frame = ttk.Frame(window)
+    frame.pack(padx=10, pady=10, fill="both", expand=True)
 
-def build():
     v_scrollbar = ttk.Scrollbar(frame, orient="vertical")
     h_scrollbar = ttk.Scrollbar(frame, orient="horizontal")
     v_scrollbar.pack(side="right", fill="y")
     h_scrollbar.pack(side="bottom", fill="x")
 
-    with open(conf.player_log_full, "r") as file:
+    with open(file, "r") as file:
         py_p_log: dict[str, dict[str, Any]] = json.load(file)
         file.close()
 
-
     meta_start = py_p_log["meta"]["start time"][0:2]
-    print(meta_start)
     meta_start = meta_start+"00"
     meta_end = py_p_log["meta"]["end time"][0:2]
-    print(meta_end)
     meta_end = int(meta_end + "00") + 100
 
+    menubar = tk.Menu(window, tearoff=0)
+    file = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="File", menu=file)
+    file.add_command(label="Quick File", command=lambda cmd = quick_choose: quick_choose(window))
+    file.add_separator()
+    file.add_command(label="Exit", command=window.destroy)
+
+    window.config(menu=menubar)
 
     # canvases with players playtime and time markers
     canv_up = tk.Canvas(frame)
@@ -100,12 +130,9 @@ def build():
     start = int(meta_start)
     end = int(meta_end)
 
-    print(meta_start, meta_end)
-    print(start, end)
     for time in range(start, end, int(conf.plog_scale_width*30)):
         time = gettime_real(time)[0:4] + "0"
         text = time
-        print(text)
         time = gettime_dec(time)
         time_canvas.create_text(10 + ((time-start)/conf.plog_scale_width), 40, text=text, angle=40)
         time_canvas.create_line((time-start)/conf.plog_scale_width, 60, (time-start)/conf.plog_scale_width, 100, dash=10, fill="darkgrey")
@@ -113,12 +140,10 @@ def build():
             py_p_log["players"]) * conf.plog_scale_height + 20,
                                 dash=10, fill="darkgrey", )
 
-
     # create title_canvas
     title_canvas.create_line(0, 0, 150, 100)
     title_canvas.create_text(90, 100, text="player", anchor="s", justify="left")
     title_canvas.create_text(125, 40, text="time", angle=90, anchor="e", justify="left")
-
 
     # Yview Function
     def multiple_yview(*args):
@@ -134,6 +159,15 @@ def build():
     v_scrollbar.config(command=multiple_yview)
     h_scrollbar.config(command=multiple_xview)
 
+    window.mainloop()
 
-build()
-p_log.mainloop()
+def safe_build( file: str = conf.player_log_full, window: tkinter.Tk = p_log) -> None:
+    try:
+        build(file=file, window=window)
+    except KeyError:
+        quick_choose(window)
+    except FileNotFoundError:
+        quick_choose(window)
+
+if __name__ == "__main__":
+    safe_build()
