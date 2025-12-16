@@ -2,6 +2,7 @@ import json
 import os
 import tkinter
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import ttk
 from typing import Any
 
@@ -83,14 +84,23 @@ def quick_choose(window):
     done.pack(side="left", padx=10, pady=10)
     close = ttk.Button(buttons_frame, text="Exit", command=toplevel.destroy)
     close.pack(side="right", padx=10, pady=10)
+    delete = ttk.Button(buttons_frame, text="Delete", command=lambda command=delete_current_file: delete_current_file(path_logs + listbox.selection_get(), toplevel, True, window))
+    delete.pack(padx=10, pady=10)
 
     frame.pack(expand=True, fill="both")
     buttons_frame.pack(expand=True, fill="x")
     toplevel.mainloop()
 
 
-def delete_current_file():
-    pass
+def delete_current_file(file: str, window: tk.Tk | tk.Toplevel, destroy: bool = False, main: tk.Tk = None):
+    if messagebox.askokcancel("Delete File?", "Want to delete the current file?", detail="this cant be undonne"):
+        print("hi")
+        print(file)
+        os.remove(file)
+        if destroy:
+            window.destroy()
+            window = main
+        quick_choose(window)
 
 
 def build(file: str, window: tk.Tk) -> None:
@@ -108,9 +118,9 @@ def build(file: str, window: tk.Tk) -> None:
     v_scrollbar.pack(side="right", fill="y", padx=10, pady=10)
     h_scrollbar.pack(side="bottom", fill="x", pady=10)
 
-    with open(file, "r") as file:
-        py_p_log: dict[str, dict[str, Any]] = json.load(file)
-        file.close()
+    with open(file, "r") as file_open:
+        py_p_log: dict[str, dict[str, Any]] = json.load(file_open)
+        file_open.close()
 
     meta_start = py_p_log["meta"]["start time"][0:2]
     meta_start = meta_start+"00"
@@ -120,15 +130,13 @@ def build(file: str, window: tk.Tk) -> None:
     # create navigation menu
     menubar = tk.Menu(frame, tearoff=0)
 
-    file = tk.Menu(menubar, tearoff=0)
-    menubar.add_cascade(label="File", menu=file)
-    file.add_command(label="Quick File", command=lambda cmd = quick_choose: quick_choose(window))
-    file.add_separator()
-    file.add_command(label="Delete", command=delete_current_file)
-    file.add_separator()
-    file.add_command(label="Exit", command=window.destroy)
-
-
+    file_menu = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="File", menu=file_menu)
+    file_menu.add_command(label="Quick File", command=lambda cmd = quick_choose: quick_choose(window))
+    file_menu.add_separator()
+    file_menu.add_command(label="Delete", command=lambda cmd = delete_current_file: delete_current_file(file, window))
+    file_menu.add_separator()
+    file_menu.add_command(label="Exit", command=window.destroy)
 
     window.config(menu=menubar)
 
