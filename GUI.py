@@ -7,6 +7,7 @@ from nextcloud_client import HTTPResponseError
 
 import API
 import config
+from configs import UI_style as Cfg_style
 
 x = '1000'
 y = '500'
@@ -32,6 +33,37 @@ player_log_full = player_log_path + player_log_file
 NC = nextcloud_client.Client('https://gmb-cloud.wiesan.de')
 nc_path = "./Minecraft mit detti/server player logs/"
 run = True
+
+font = ("JetBrainsMono", 12)
+
+background = "#103040"
+background_sec = "#304060"
+background_hover = "#504030"
+background_disabled = "#d0c0d0"
+foreground = "#a0a060"
+foreground_sec = "#c080a0"
+foreground_hover = "#c0c0a0"
+foreground_disabled = "#d0d0d0"
+
+style = ttk.Style()
+style.map("TButton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")],)
+style.configure(style="TButton", relief="flat", background=background_sec, font=Cfg_style.btns["font"], foreground=foreground)
+
+style.configure("TLabel", background=background, foreground=foreground, font=font)
+
+style.configure("TFrame", background=background, foreground=foreground)
+
+style.configure("TScrollbar", background=background_sec, foreground=foreground, relief="flat")
+style.map("TScrollbar", background=[("active", background_hover), ("disabled", background_disabled)])
+
+style.map("TRadiobutton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")])
+style.configure("TRadiobutton", background=background_sec, foreground=foreground, font=font, borderwidth=0, padding=2)
+
+style.map("TCheckbutton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")])
+style.configure("TCheckbutton", background=background_sec, foreground=foreground, font=font, borderwidth=0, padding=2)
+
+style.configure("TLabelframe", background=background, foreground=foreground, labelmargins=5, borderwidth=2, bordercolor=foreground_sec)
+style.configure("TLabelframe.Label", font=font, background=background, foreground=foreground)
 
 
 def usr_quit():
@@ -92,22 +124,28 @@ try:
 except tk.TclError:
     API.Message(API.TYPE["file_not_found"])
 
+main_frame = ttk.Frame(root)
+main_frame.pack(fill="both", expand=True)
+
 # left frame
-left_frame = tk.Frame(root)
-left_frame.pack(side="left", fill="both", expand=False, padx=20)
+left_frame = ttk.Frame(main_frame)
+left_frame.pack(side="left", fill="both", expand=False, pady=10, padx=10)
 
 ttk.Label(left_frame, text="Streams").pack(pady=20)
+
+radio_frame = ttk.Labelframe(left_frame, text=" Radio ")
+radio_frame.pack(ipady=5, fill="x")
 
 # create radio buttons for streams
 selected_stream = tk.StringVar()
 for option in stream_options:
     r = ttk.Radiobutton(
-        left_frame,
+        radio_frame,
         text=option[0],
         value=option[1],
         variable=selected_stream
     )
-    r.pack(fill='x', padx=5, pady=5)
+    r.pack(fill='x', padx=10, pady=5)
 
 # create update button
 ttk.Button(left_frame, text="Update", command=lambda: change_stream(selected_stream)).pack(pady=20)
@@ -121,12 +159,12 @@ ttk.Checkbutton(
 ttk.Button(left_frame, text="Quit", command=usr_quit).pack(side="bottom", pady=20)
 
 # create a vertical separator
-separator = ttk.Separator(root, orient="vertical")
-separator.pack(side="left", fill="y", pady=5)
+separator = ttk.Separator(main_frame, orient="vertical")
+separator.pack(side="left", fill="y", pady=10)
 
 # right frame
-right_frame = tk.Frame(root)
-right_frame.pack(side="right", fill="both", expand=True)
+right_frame = ttk.Frame(main_frame)
+right_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 ttk.Label(right_frame, text="Stream output").pack(pady=20)
 
 # create text with scrollbar

@@ -36,7 +36,7 @@ style = ttk.Style()
 style.map("TButton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")],)
 style.configure(style="TButton" , relief="flat", background=background, font=Cfg_style.btns["font"], foreground=foreground)
 
-style.configure("TLabel", background=background, foreground=foreground)
+style.configure("TLabel", background=background, foreground=foreground, font=font)
 
 style.configure("TFrame", background=background, foreground=foreground)
 
@@ -214,7 +214,7 @@ def build(file: str, window: tk.Tk) -> None:
     v_scrollbar.config(command=multiple_yview)
     h_scrollbar.config(command=multiple_xview)
 
-    window.mainloop()
+
 
 
 def safe_build( file: str = conf.player_log_full, window: tkinter.Tk = p_log) -> None:
@@ -224,6 +224,8 @@ def safe_build( file: str = conf.player_log_full, window: tkinter.Tk = p_log) ->
         quick_choose(window)
     except FileNotFoundError:
         quick_choose(window)
+
+    window.mainloop()
 
 
 if __name__ == "__main__":
