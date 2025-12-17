@@ -7,6 +7,7 @@ from nextcloud_client import HTTPResponseError
 
 import API
 import config
+from configs import UI_style as Cfg_style
 
 x = '1000'
 y = '500'
@@ -32,6 +33,38 @@ player_log_full = player_log_path + player_log_file
 NC = nextcloud_client.Client('https://gmb-cloud.wiesan.de')
 nc_path = "./Minecraft mit detti/server player logs/"
 run = True
+
+font = Cfg_style.font
+
+background = Cfg_style.background
+background_sec = Cfg_style.background_sec
+background_hover = Cfg_style.background_hover
+background_disabled = Cfg_style.background_disabled
+
+foreground = Cfg_style.foreground
+foreground_sec = Cfg_style.foreground
+foreground_hover = Cfg_style.foreground_hover
+foreground_disabled = Cfg_style.foreground_disabled
+
+style = ttk.Style()
+style.map("TButton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")],)
+style.configure(style="TButton", relief="flat", background=background_sec, font=Cfg_style.btns["font"], foreground=foreground)
+
+style.configure("TLabel", background=background, foreground=foreground, font=font)
+
+style.configure("TFrame", background=background, foreground=foreground)
+
+style.configure("TScrollbar", background=background_sec, foreground=foreground, relief="flat")
+style.map("TScrollbar", background=[("active", background_hover), ("disabled", background_disabled)])
+
+style.map("TRadiobutton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")])
+style.configure("TRadiobutton", background=background_sec, foreground=foreground, font=font, borderwidth=0, padding=2)
+
+style.map("TCheckbutton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")])
+style.configure("TCheckbutton", background=background_sec, foreground=foreground, font=font, borderwidth=0, padding=2)
+
+style.configure("TLabelframe", background=background, foreground=foreground, labelmargins=5, borderwidth=2, bordercolor=foreground_sec)
+style.configure("TLabelframe.Label", font=font, background=background, foreground=foreground)
 
 
 def usr_quit():
@@ -92,22 +125,28 @@ try:
 except tk.TclError:
     API.Message(API.TYPE["file_not_found"])
 
+main_frame = ttk.Frame(root)
+main_frame.pack(fill="both", expand=True)
+
 # left frame
-left_frame = tk.Frame(root)
-left_frame.pack(side="left", fill="both", expand=False, padx=20)
+left_frame = ttk.Frame(main_frame)
+left_frame.pack(side="left", fill="both", expand=False, pady=10, padx=10)
 
 ttk.Label(left_frame, text="Streams").pack(pady=20)
+
+radio_frame = ttk.Labelframe(left_frame, text=" Radio ")
+radio_frame.pack(ipady=5, fill="x")
 
 # create radio buttons for streams
 selected_stream = tk.StringVar()
 for option in stream_options:
     r = ttk.Radiobutton(
-        left_frame,
+        radio_frame,
         text=option[0],
         value=option[1],
         variable=selected_stream
     )
-    r.pack(fill='x', padx=5, pady=5)
+    r.pack(fill='x', padx=10, pady=5)
 
 # create update button
 ttk.Button(left_frame, text="Update", command=lambda: change_stream(selected_stream)).pack(pady=20)
@@ -121,17 +160,17 @@ ttk.Checkbutton(
 ttk.Button(left_frame, text="Quit", command=usr_quit).pack(side="bottom", pady=20)
 
 # create a vertical separator
-separator = ttk.Separator(root, orient="vertical")
-separator.pack(side="left", fill="y", pady=5)
+separator = ttk.Separator(main_frame, orient="vertical")
+separator.pack(side="left", fill="y", pady=10)
 
 # right frame
-right_frame = tk.Frame(root)
-right_frame.pack(side="right", fill="both", expand=True)
+right_frame = ttk.Frame(main_frame)
+right_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 ttk.Label(right_frame, text="Stream output").pack(pady=20)
 
 # create text with scrollbar
 v_scrollbar = ttk.Scrollbar(right_frame)
 v_scrollbar.pack(side="right", fill="y")
-cons = tk.Text(right_frame, yscrollcommand=v_scrollbar.set, state="disabled")
+cons = tk.Text(right_frame, yscrollcommand=v_scrollbar.set, state="disabled", font=font, background=background_sec, foreground=foreground_sec, relief="flat", selectbackground=background_hover, selectforeground=foreground_hover)
 cons.pack(expand=True, fill="both")
 v_scrollbar.config(command=cons.yview)
