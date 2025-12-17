@@ -11,16 +11,17 @@ from configs import UI_style as Cfg_style
 
 path_logs = conf.player_log_path
 
-font = ("JetBrainsMono", 12)
+font = Cfg_style.font
 
-background = "#182827"
-background_sec = "#212323"
-background_hover = "#16333a"
-background_disabled = "#272d2e"
-foreground = "#199CA8"
-foreground_sec = "#6b1b1f"
-foreground_hover = "#9a2c31"
-foreground_disabled = "#1f2a29"
+background = Cfg_style.background
+background_sec = Cfg_style.background_sec
+background_hover = Cfg_style.background_hover
+background_disabled = Cfg_style.background_disabled
+
+foreground = Cfg_style.foreground
+foreground_sec = Cfg_style.foreground
+foreground_hover = Cfg_style.foreground_hover
+foreground_disabled = Cfg_style.foreground_disabled
 
 x = '1000'
 y = '500'
