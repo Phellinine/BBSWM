@@ -13,14 +13,14 @@ path_logs = conf.player_log_path
 
 font = ("JetBrainsMono", 12)
 
-background = "#103040"
-background_sec = "#304060"
-background_hover = "#504030"
-background_disabled = "#d0c0d0"
-foreground = "#a0a060"
-foreground_sec = "#c080a0"
-foreground_hover = "#c0c0a0"
-foreground_disabled = "#d0d0d0"
+background = "#182827"
+background_sec = "#212323"
+background_hover = "#16333a"
+background_disabled = "#272d2e"
+foreground = "#199CA8"
+foreground_sec = "#6b1b1f"
+foreground_hover = "#9a2c31"
+foreground_disabled = "#1f2a29"
 
 x = '1000'
 y = '500'

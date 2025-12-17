@@ -36,14 +36,14 @@ run = True
 
 font = ("JetBrainsMono", 12)
 
-background = "#103040"
-background_sec = "#304060"
-background_hover = "#504030"
-background_disabled = "#d0c0d0"
-foreground = "#a0a060"
-foreground_sec = "#c080a0"
-foreground_hover = "#c0c0a0"
-foreground_disabled = "#d0d0d0"
+background = "#182827"
+background_sec = "#212323"
+background_hover = "#16333a"
+background_disabled = "#272d2e"
+foreground = "#199CA8"
+foreground_sec = "#6b1b1f"
+foreground_hover = "#9a2c31"
+foreground_disabled = "#1f2a29"
 
 style = ttk.Style()
 style.map("TButton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")],)
@@ -170,6 +170,6 @@ ttk.Label(right_frame, text="Stream output").pack(pady=20)
 # create text with scrollbar
 v_scrollbar = ttk.Scrollbar(right_frame)
 v_scrollbar.pack(side="right", fill="y")
-cons = tk.Text(right_frame, yscrollcommand=v_scrollbar.set, state="disabled")
+cons = tk.Text(right_frame, yscrollcommand=v_scrollbar.set, state="disabled", font=font, background=background_sec, foreground=foreground_sec, relief="flat", selectbackground=background_hover, selectforeground=foreground_hover)
 cons.pack(expand=True, fill="both")
 v_scrollbar.config(command=cons.yview)
