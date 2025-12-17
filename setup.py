@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name = "BBSWM",
-    version = "v0.1",
-    description = "BBSWM",
+    version = "v0.3.1",
+    description = "BBSWM-_B_lock für _B_lock _S_erver _W_ork _M_anager. Now with UI styling!",
     author = "Konrad",
     author_email = "konrad.spicker@gmx.de",
     url = "https://github.com/konrad/BBSWM",
