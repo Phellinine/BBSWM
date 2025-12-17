@@ -75,7 +75,7 @@ def quick_choose(window):
     label.pack(anchor="n",  padx=10, pady=10)
     path_label = ttk.Label(frame, text=os.path.abspath(path_logs))
     path_label.pack(anchor="n", padx=10, pady=10)
-    listbox = tk.Listbox(frame)
+    listbox = tk.Listbox(frame, font=font, selectmode=tk.SINGLE, foreground=foreground_sec, background=background_sec, relief="flat", selectbackground=background_hover, selectforeground=foreground_hover, disabledforeground=foreground_disabled)
     for file in os.listdir(path_logs):
         listbox.insert(tk.END, file)
     listbox.pack()
@@ -129,9 +129,9 @@ def build(file: str, window: tk.Tk) -> None:
     meta_end = int(meta_end + "00") + 100
 
     # create navigation menu
-    menubar = tk.Menu(frame, tearoff=0)
+    menubar = tk.Menu(frame, tearoff=0, font=font, foreground=foreground_sec, background=background_sec, relief="flat", activebackground=background_hover, activeforeground=foreground_hover)
 
-    file_menu = tk.Menu(menubar, tearoff=0)
+    file_menu = tk.Menu(menubar, tearoff=0, relief="flat", font=font, foreground=foreground_sec, background=background_sec, activebackground=background_hover, activeforeground=foreground_hover)
     menubar.add_cascade(label="File", menu=file_menu)
     file_menu.add_command(label="Quick File", command=lambda cmd = quick_choose: quick_choose(window))
     file_menu.add_separator()
