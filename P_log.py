@@ -34,8 +34,10 @@ p_log.title("BBSWM -- Player Log")  # -B-lock für -B-lock -S-erver -W-ork -M-an
 p_log.geometry(x + 'x' + y + space_x + space_y)
 
 style = ttk.Style()
-style.map("TButton", background=[("active", background_hover),("pressed", "#ffffff")], foreground=[("active", foreground_hover),("pressed", "#ffffff")],)
-style.configure(style="TButton" , relief="flat", background=background, font=Cfg_style.btns["font"], foreground=foreground)
+style.map("TButton", background=[("active", background_hover), ("pressed", "#ffffff")],
+          foreground=[("active", foreground_hover), ("pressed", "#ffffff")], )
+style.configure(style="TButton", relief="flat", background=background, font=Cfg_style.btns["font"],
+                foreground=foreground)
 
 style.configure("TLabel", background=background, foreground=foreground, font=font)
 
@@ -47,9 +49,9 @@ style.map("TScrollbar", background=[("active", background_hover), ("disabled", b
 
 def gettime_real(time_dec: int):
     h_real = str(time_dec)[0:2]
-    min_real = str(int(int(str(time_dec)[2:4])/(5/3)))
+    min_real = str(int(int(str(time_dec)[2:4]) / (5 / 3)))
     if len(min_real) == 1:
-        min_real = "0"+min_real
+        min_real = "0" + min_real
     time_real = h_real + min_real
     time_real = time_real[-4:-2] + ":" + time_real[-2:]
     return time_real
@@ -58,21 +60,22 @@ def gettime_dec(time_dec):
     h_dec = time_dec[0:2]
     min_dec = str(int(int(time_dec[3:5]) * (5 / 3)))
     if len(min_dec) == 1:
-        min_dec = "0"+min_dec
-    time_dec = int(h_dec + min_dec)
-    return time_dec
+        min_dec = "0" + min_dec
+    time_real = int(h_dec + min_dec)
+    return time_real
+
 
 def quick_choose(window):
     def done_cmd(selection: str) -> None:
         for widget in window.winfo_children():
             widget.destroy()
 
-        safe_build(path_logs+selection, window)
+        build(path_logs + selection, window)
 
     toplevel = tk.Toplevel(window)
     frame = ttk.Frame(toplevel)
     label = ttk.Label(frame, text="Choose File")
-    label.pack(anchor="n",  padx=10, pady=10)
+    label.pack(anchor="n", padx=10, pady=10)
     path_label = ttk.Label(frame, text=os.path.abspath(path_logs))
     path_label.pack(anchor="n", padx=10, pady=10)
     listbox = tk.Listbox(frame, font=font, selectmode=tk.SINGLE, foreground=foreground_sec, background=background_sec, relief="flat", selectbackground=background_hover, selectforeground=foreground_hover, disabledforeground=foreground_disabled)
@@ -129,13 +132,15 @@ def build(file: str, window: tk.Tk) -> None:
     meta_end = int(meta_end + "00") + 100
 
     # create navigation menu
-    menubar = tk.Menu(frame, tearoff=0, font=font, foreground=foreground_sec, background=background_sec, relief="flat", activebackground=background_hover, activeforeground=foreground_hover)
+    menubar = tk.Menu(frame, tearoff=0, font=font, foreground=foreground_sec, background=background_sec, relief="flat",
+                      activebackground=background_hover, activeforeground=foreground_hover)
 
-    file_menu = tk.Menu(menubar, tearoff=0, relief="flat", font=font, foreground=foreground_sec, background=background_sec, activebackground=background_hover, activeforeground=foreground_hover)
+    file_menu = tk.Menu(menubar, tearoff=0, relief="flat", font=font, foreground=foreground_sec,
+                        background=background_sec, activebackground=background_hover, activeforeground=foreground_hover)
     menubar.add_cascade(label="File", menu=file_menu)
-    file_menu.add_command(label="Quick File", command=lambda cmd = quick_choose: quick_choose(window))
+    file_menu.add_command(label="Quick File", command=lambda cmd=quick_choose: quick_choose(window))
     file_menu.add_separator()
-    file_menu.add_command(label="Delete", command=lambda cmd = delete_current_file: delete_current_file(file, window))
+    file_menu.add_command(label="Delete", command=lambda cmd=delete_current_file: delete_current_file(file, window))
     file_menu.add_separator()
     file_menu.add_command(label="Exit", command=window.destroy)
 
@@ -185,21 +190,22 @@ def build(file: str, window: tk.Tk) -> None:
     start = int(meta_start)
     end = int(meta_end)
 
-    for time in range(start, end, int(conf.plog_scale_width*30)):
+    for time in range(start, end, int(conf.plog_scale_width * 30)):
         time = gettime_real(time)[0:4] + "0"
         text = time
         time = gettime_dec(time)
-        time_canvas.create_text(10 + ((time-start)/conf.plog_scale_width), 40, text=text, angle=40, fill=canvas_text, font=font)
-        time_canvas.create_line((time-start)/conf.plog_scale_width, 60, (time-start)/conf.plog_scale_width, 100, dash=10, fill=canvas_lines, width=2)
-        playtimes.create_line((time - start) / conf.plog_scale_width, 0, (time - start) / conf.plog_scale_width, len(
-            py_p_log["players"]) * conf.plog_scale_height + 20,
+        time_canvas.create_text(10 + ((time - start) / conf.plog_scale_width), 40, text=text, angle=40,
+                                fill=canvas_text, font=font)
+        time_canvas.create_line((time - start) / conf.plog_scale_width, 60, (time - start) / conf.plog_scale_width, 100,
                                 dash=10, fill=canvas_lines, width=2)
+        playtimes.create_line((time - start) / conf.plog_scale_width, 0, (time - start) / conf.plog_scale_width,
+                              num_players * conf.plog_scale_height + 20,
+                              dash=10, fill=canvas_lines, width=2)
 
     # create title_canvas
     title_canvas.create_line(0, 0, 150, 100, fill=canvas_lines, width=2)
     title_canvas.create_text(70, 95, text="player", anchor="s", justify="left", fill=canvas_text, font=font)
     title_canvas.create_text(135, 30, text="time", angle=90, anchor="e", justify="left", fill=canvas_text, font=font)
-
 
     # Yview Function
     def multiple_yview(*args):
@@ -211,22 +217,8 @@ def build(file: str, window: tk.Tk) -> None:
         playtimes.xview(*args)
         time_canvas.xview(*args)
 
-
     v_scrollbar.config(command=multiple_yview)
     h_scrollbar.config(command=multiple_xview)
-
-
-
-
-def safe_build( file: str = conf.player_log_full, window: tkinter.Tk = p_log) -> None:
-    try:
-        build(file=file, window=window)
-    except KeyError:
-        quick_choose(window)
-    except FileNotFoundError:
-        quick_choose(window)
-
-    window.mainloop()
 
 
 if __name__ == "__main__":
