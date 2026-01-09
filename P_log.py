@@ -47,6 +47,12 @@ style.map("TScrollbar", background=[("active", background_hover), ("disabled", b
 
 
 def gettime_real(time_dec: int):
+    """
+    takes decimal time and converts it to conventional time, by scaling minutes back to 60
+    :param time_dec: time marker with minutes scaled to 100
+    :return: time marker with minutes scaled to 60
+    """
+
     h_real = str(time_dec)[0:2]
     min_real = str(int(int(str(time_dec)[2:4]) / (5 / 3)))
     if len(min_real) == 1:
@@ -55,17 +61,30 @@ def gettime_real(time_dec: int):
     time_real = time_real[-4:-2] + ":" + time_real[-2:]
     return time_real
 
-def gettime_dec(time_dec):
-    h_dec = time_dec[0:2]
-    min_dec = str(int(int(time_dec[3:5]) * (5 / 3)))
+
+def gettime_dec(time_real):
+    """
+    takes conventional time and converts it to decimal time, by scaling minutes to 100
+    :param time_real: time marker with minutes scaled to 60
+    :return: time marker with minutes scaled to 100
+    """
+
+    h_dec = time_real[0:2]
+    min_dec = str(int(int(time_real[3:5]) * (5 / 3)))
     if len(min_dec) == 1:
         min_dec = "0" + min_dec
     time_real = int(h_dec + min_dec)
     return time_real
 
 
-def quick_choose(window):
-    def done_cmd(selection: str) -> None:
+def quick_choose(window) -> None:
+    """
+    open a popup to choose a file to display
+    :param window: window which will contain the popup
+    :return: None
+    """
+
+    def done_cmd(selection: str) -> None:  # action to execute upon file selection
         for widget in window.winfo_children():
             widget.destroy()
 
