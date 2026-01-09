@@ -22,29 +22,6 @@ foreground_sec = Cfg_style.foreground
 foreground_hover = Cfg_style.foreground_hover
 foreground_disabled = Cfg_style.foreground_disabled
 
-x = '1000'
-y = '500'
-space_x = "-1000"
-space_y = "+100"
-
-# create window
-p_log = tk.Tk()
-p_log.title("BBSWM -- Player Log")  # -B-lock für -B-lock -S-erver -W-ork -M-anager
-p_log.geometry(x + 'x' + y + space_x + space_y)
-
-style = ttk.Style()
-style.map("TButton", background=[("active", background_hover), ("pressed", "#ffffff")],
-          foreground=[("active", foreground_hover), ("pressed", "#ffffff")], )
-style.configure(style="TButton", relief="flat", background=background, font=Cfg_style.btns["font"],
-                foreground=foreground)
-
-style.configure("TLabel", background=background, foreground=foreground, font=font)
-
-style.configure("TFrame", background=background, foreground=foreground)
-
-style.configure("TScrollbar", background=background_sec, foreground=foreground, relief="flat")
-style.map("TScrollbar", background=[("active", background_hover), ("disabled", background_disabled)])
-
 
 def gettime_real(time_dec: int):
     """
@@ -148,6 +125,14 @@ def build(file: str, window: tk.Tk) -> None:
     :param window: a Tkinter window
     :return: None
     """
+
+    x = '1000'
+    y = '500'
+    space_x = "-1000"
+    space_y = "+100"
+
+    window.title("BBSWM -- Player Log")  # -B-lock für -B-lock -S-erver -W-ork -M-anager
+    window.geometry(x + 'x' + y + space_x + space_y)
 
     canvas_bg = background_sec
     canvas_text = foreground
@@ -303,8 +288,3 @@ def build(file: str, window: tk.Tk) -> None:
 
     v_scrollbar.config(command=multiple_yview)
     h_scrollbar.config(command=multiple_xview)
-
-
-if __name__ == "__main__":
-    build(conf.player_log_full, p_log)
-    p_log.mainloop()
