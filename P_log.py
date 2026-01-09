@@ -110,7 +110,8 @@ def quick_choose(window) -> None:
     done.pack(side="left", padx=10, pady=10)
     close = ttk.Button(buttons_frame, text="Exit", command=toplevel.destroy)
     close.pack(side="right", padx=10, pady=10)
-    delete = ttk.Button(buttons_frame, text="Delete", command=lambda command=delete_current_file: delete_current_file(path_logs + listbox.selection_get(), toplevel, True, window))
+    delete = ttk.Button(buttons_frame, text="Delete", command=lambda command=delete_current_file: delete_current_file(
+        path_logs + listbox.selection_get(), toplevel))
     delete.pack(padx=10, pady=10)
 
     frame.pack(expand=True, fill="both")
@@ -132,9 +133,10 @@ def delete_current_file(file: str, window: tk.Toplevel | tk.Tk) -> None:
         print("hi")
         print(file)
         os.remove(file)
-        if destroy:
-            window.destroy()
-            window = main
+        if type(window) == tk.Toplevel:
+            dest = window
+            window = window.master
+            dest.destroy()
         quick_choose(window)
 
 
@@ -160,14 +162,53 @@ def build(file: str, window: tk.Tk) -> None:
     v_scrollbar.pack(side="right", fill="y", padx=10, pady=10)
     h_scrollbar.pack(side="bottom", fill="x", pady=10)
 
-    with open(file, "r") as file_open:
-        py_p_log: dict[str, dict[str, Any]] = json.load(file_open)
-        file_open.close()
+    try:
+        with open(file, "r") as file_open:
+            py_p_log: dict[str, dict[str, Any]] = json.load(file_open)
+            file_open.close()
+    except json.decoder.JSONDecodeError:
+        messagebox.showerror(
+            "File Error", "The selected file is not a valid json file", detail="file: {file}")
+        quick_choose(window)
+    except FileNotFoundError:
+        messagebox.showerror("File Error", "The selected file does not exist", detail=f"file: {file}")
+        quick_choose(window)
 
-    meta_start = py_p_log["meta"]["start time"][0:2]
-    meta_start = meta_start+"00"
-    meta_end = py_p_log["meta"]["end time"][0:2]
+    def get_log_data(data_path: list[str], exp_type: type = str) -> Any:
+        """
+        return data from the read JSON file without crashing if expected data is missing
+        :param data_path: list of strings going down the objects needed
+        :param exp_type: type of data expected to be returned
+        :return: data at path location
+        """
+
+        re = py_p_log
+        for item in data_path:
+            try:
+                re = re[item]
+            except KeyError:
+                if messagebox.askretrycancel(
+                        "Data Error", "The selected file does not contain the expected data",
+                            detail=f"{re} does not contain {item}. Path was: {data_path}"):
+                    get_log_data(data_path)
+                quick_choose(window)
+                return None
+
+        if type(re) != exp_type:
+            if messagebox.askretrycancel(
+                    "Data Error", "The selected file does not contain the expected data",
+                        detail=f"{re} is of type {type(re)}, expected type: {exp_type}. Path was: {data_path}"):
+                get_log_data(data_path)
+            quick_choose(window)
+            return None
+        return re
+
+    meta_start = get_log_data(["meta", "start time"])[0:2]
+    meta_start = meta_start + "00"
+    meta_end = get_log_data(["meta", "end time"])[0:2]
     meta_end = int(meta_end + "00") + 100
+    players_dict: dict[Any, Any] = get_log_data(["players"], dict)
+    num_players = len(players_dict)
 
     # create navigation menu
     menubar = tk.Menu(frame, tearoff=0, font=font, foreground=foreground_sec, background=background_sec, relief="flat",
@@ -188,12 +229,13 @@ def build(file: str, window: tk.Tk) -> None:
     frame_up = ttk.Frame(frame)
     frame_up.pack(anchor="n", fill="both")
     playtimes = tk.Canvas(frame, bg=canvas_bg, yscrollcommand=v_scrollbar.set,
-                          xscrollcommand=h_scrollbar.set, scrollregion=(0, 0, meta_end, len(
-            py_p_log["players"]) * conf.plog_scale_height))  # playtimes
+                          xscrollcommand=h_scrollbar.set,
+                          scrollregion=(0, 0, meta_end, num_players * conf.plog_scale_height))  # playtimes
     players = tk.Canvas(frame, yscrollcommand=v_scrollbar.set, bg=canvas_bg, width=150,
-                        scrollregion=(0, 0, 0, len(py_p_log["players"]) * conf.plog_scale_height))  # players
-    title_canvas = tk.Canvas(frame_up, height=100, width=150, bg=canvas_bg) # title
-    time_canvas = tk.Canvas(frame_up, height=100, bg=canvas_bg, xscrollcommand=h_scrollbar.set, scrollregion=(0, 0, meta_end, 0)) # time marks
+                        scrollregion=(0, 0, 0, num_players * conf.plog_scale_height))  # players
+    title_canvas = tk.Canvas(frame_up, height=100, width=150, bg=canvas_bg)  # title
+    time_canvas = tk.Canvas(frame_up, height=100, bg=canvas_bg, xscrollcommand=h_scrollbar.set,
+                            scrollregion=(0, 0, meta_end, 0))  # time marks
 
     title_canvas.pack(anchor="w", side="left", expand=False, padx=10, pady=10)
     time_canvas.pack(anchor="e", side="right", fill="x", expand=True, padx=10, pady=10)
@@ -202,12 +244,12 @@ def build(file: str, window: tk.Tk) -> None:
 
     # create playtime and players
     num: int = 0
-    length_time = len(py_p_log["players"]) * conf.plog_scale_height + 20
-    for player in py_p_log["players"]:
+    player_length_coords = num_players * conf.plog_scale_height + 20
+    for player in players_dict:
         players.create_text(10, (num * conf.plog_scale_height) + ((conf.plog_scale_height - 10) / 2 + 5), text=player,
                             justify="left", anchor="w", font=font, fill=canvas_text)
 
-        for time in py_p_log["players"][player]["playtime"]:
+        for time in get_log_data(["players", player, "playtime"], list):
             on = gettime_dec(time["on"])
             of = gettime_dec(time["of"])
             on: int = on - int(meta_start)
@@ -217,12 +259,16 @@ def build(file: str, window: tk.Tk) -> None:
                                                 (conf.plog_scale_height * num) + conf.plog_scale_height)
             playtimes.create_rectangle(corner_up, corner_down, fill=canvas_object, outline=canvas_text, width=2)
 
-        playtimes.create_line(0, conf.plog_scale_height * num + 5, length_time, conf.plog_scale_height * num + 5, fill=canvas_lines, width=2)
-        players.create_line(0, conf.plog_scale_height * num + 5, length_time, conf.plog_scale_height * num + 5, fill=canvas_lines, width=2)
+        playtimes.create_line(0, conf.plog_scale_height * num + 5, player_length_coords,
+                              conf.plog_scale_height * num + 5, fill=canvas_lines, width=2)
+        players.create_line(0, conf.plog_scale_height * num + 5, player_length_coords, conf.plog_scale_height * num + 5,
+                            fill=canvas_lines, width=2)
         num += 1
 
-    playtimes.create_line(0, conf.plog_scale_height * num + 5, length_time, conf.plog_scale_height * num + 5, fill=canvas_lines, width=2)
-    players.create_line(0, conf.plog_scale_height * num + 5, length_time, conf.plog_scale_height * num + 5, fill=canvas_lines, width=2)
+    playtimes.create_line(0, conf.plog_scale_height * num + 5, player_length_coords, conf.plog_scale_height * num + 5,
+                          fill=canvas_lines, width=2)
+    players.create_line(0, conf.plog_scale_height * num + 5, player_length_coords, conf.plog_scale_height * num + 5,
+                        fill=canvas_lines, width=2)
 
     # create time marks
     start = int(meta_start)
@@ -260,4 +306,5 @@ def build(file: str, window: tk.Tk) -> None:
 
 
 if __name__ == "__main__":
-    safe_build()
+    build(conf.player_log_full, p_log)
+    p_log.mainloop()
