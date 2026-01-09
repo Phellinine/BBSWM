@@ -96,7 +96,9 @@ def quick_choose(window) -> None:
     label.pack(anchor="n", padx=10, pady=10)
     path_label = ttk.Label(frame, text=os.path.abspath(path_logs))
     path_label.pack(anchor="n", padx=10, pady=10)
-    listbox = tk.Listbox(frame, font=font, selectmode=tk.SINGLE, foreground=foreground_sec, background=background_sec, relief="flat", selectbackground=background_hover, selectforeground=foreground_hover, disabledforeground=foreground_disabled)
+    listbox = tk.Listbox(frame, font=font, selectmode=tk.SINGLE, foreground=foreground_sec, background=background_sec,
+                         relief="flat", selectbackground=background_hover, selectforeground=foreground_hover,
+                         disabledforeground=foreground_disabled)
     for file in os.listdir(path_logs):
         listbox.insert(tk.END, file)
     listbox.pack()
