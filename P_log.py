@@ -90,6 +90,7 @@ def quick_choose(window) -> None:
 
         build(path_logs + selection, window)
 
+    # create window with files listed
     toplevel = tk.Toplevel(window)
     frame = ttk.Frame(toplevel)
     label = ttk.Label(frame, text="Choose File")
@@ -103,6 +104,7 @@ def quick_choose(window) -> None:
         listbox.insert(tk.END, file)
     listbox.pack()
 
+    # create navigation buttons
     buttons_frame = ttk.Frame(toplevel)
     done = ttk.Button(buttons_frame, text="Done", command=lambda command=done_cmd: done_cmd(listbox.selection_get()))
     done.pack(side="left", padx=10, pady=10)
@@ -116,8 +118,17 @@ def quick_choose(window) -> None:
     toplevel.mainloop()
 
 
-def delete_current_file(file: str, window: tk.Tk | tk.Toplevel, destroy: bool = False, main: tk.Tk = None):
-    if messagebox.askokcancel("Delete File?", "Want to delete the current file?", detail="this cant be undonne"):
+def delete_current_file(file: str, window: tk.Toplevel | tk.Tk) -> None:
+    """
+    creates a popup with the question to delete the current file, then asks the user to choose a new file
+    If done from a toplevel destroys it.
+    :param file: file to delete
+    :param window: toplevel to destroy
+    :return: None
+    """
+
+    if messagebox.askokcancel(
+            "Delete File?", "Want to delete the current file?", detail="this cant be undonne"):
         print("hi")
         print(file)
         os.remove(file)
@@ -128,11 +139,18 @@ def delete_current_file(file: str, window: tk.Tk | tk.Toplevel, destroy: bool = 
 
 
 def build(file: str, window: tk.Tk) -> None:
+    """
+    Creates a new frame in an empty window.
+    In this frame creates a view for a player log file.
+    :param file: path to a playerlog file
+    :param window: a Tkinter window
+    :return: None
+    """
+
     canvas_bg = background_sec
     canvas_text = foreground
     canvas_lines = foreground_sec
     canvas_object = background_hover
-
 
     frame = ttk.Frame(window)
     frame.pack(fill="both", expand=True)
