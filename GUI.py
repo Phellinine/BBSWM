@@ -9,8 +9,10 @@ import API
 import config
 from configs import UI_style as Cfg_style
 
-stream_options = [('Global', '[Global]'),
-                  ('All', '')]
+stream_options: list[tuple[str, str]] = [('Global', '[Global]'),
+                                         ('All', ''),
+                                         ("Warn", "/WARN"),
+                                         ("Error", "/ERROR")]
 
 stream = API.Console([""], "[")
 
@@ -34,7 +36,12 @@ foreground_hover = Cfg_style.foreground_hover
 foreground_disabled = Cfg_style.foreground_disabled
 
 
-def usr_quit(window):
+def usr_quit(window: tk.Tk) -> None:
+    """
+    quit the window
+    :param window: main window which will be destroyed
+    :return: None
+    """
     global run
     try:
         NC.login("72361402", "mbJHD-c3WEM-3LAQC-LJTzi-F3WWf")
@@ -47,6 +54,10 @@ def usr_quit(window):
 
 
 def get_stream() -> str:
+    """
+    gets the current stream from the exaroton api and seperates lines
+    :return: the current stream, with lines seperated with line breaks
+    """
     global stream
     out = ""
     for line in stream.get():
@@ -55,7 +66,13 @@ def get_stream() -> str:
     return out
 
 
-def update_stream(console, autoscroll):
+def update_stream(console: tk.Text, autoscroll: tk.Variable) -> None:
+    """
+    takes a tkinter text object and appends new stream output
+    :param console: tkinter text object where the stream is displayed
+    :param autoscroll: tkinter variable with bool if the window should scroll to the most recent stream output
+    :return: None
+    """
     try:
         console['state'] = 'normal'
         console.insert(tk.END, get_stream())
@@ -72,9 +89,15 @@ def update_stream(console, autoscroll):
         console['state'] = 'disabled'
 
 
-def change_stream(selected, console, autoscroll):
+def force_update_stream(selected: tk.Variable, console: tk.Text, autoscroll: tk.Variable) -> None:
+    """
+    takes a tkinter text object and replaces its content with the wanted stream, thereby force updating it
+    :param selected: tkinter variable with the selected stream filtering parameter
+    :param console: tkinter text object where the stream is displayed
+    :param autoscroll: tkinter variable with bool if the window should scroll to the most recent stream output
+    :return: None
+    """
     global stream
-    print(selected)
     console['state'] = 'normal'
     console.delete('1.0', tk.END)
     console['state'] = 'disabled'
@@ -132,7 +155,8 @@ def build(window: tk.Tk):
         r.pack(fill='x', padx=10, pady=5)
 
     # create update button
-    ttk.Button(left_frame, text="Update", command=lambda: change_stream(selected_stream, console, autoscroll)).pack(pady=20)
+    ttk.Button(left_frame, text="Update", command=lambda: force_update_stream(selected_stream, console,
+                                                                              autoscroll)).pack(pady=20)
     # create auto scroll button
     ttk.Checkbutton(
         left_frame,
@@ -157,3 +181,5 @@ def build(window: tk.Tk):
     console = tk.Text(right_frame, yscrollcommand=v_scrollbar.set, state="disabled", font=font, background=background_sec, foreground=foreground_sec, relief="flat", selectbackground=background_hover, selectforeground=foreground_hover)
     console.pack(expand=True, fill="both")
     v_scrollbar.config(command=console.yview)
+
+    force_update_stream(selected_stream, console, autoscroll)
