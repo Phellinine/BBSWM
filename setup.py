@@ -9,7 +9,8 @@ setup(
     url = "https://github.com/konrad/BBSWM",
     packages = find_packages(),
     install_requires = ["tk",
-                        "desktop-notifier" ],
+                        "desktop-notifier",
+                        "exaroton"],
     python_requires = ">=3.6",
     entry_points = {"main": ["BBSWM = BBSWM.main:main"]},
     classifiers = [
