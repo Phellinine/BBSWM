@@ -10,7 +10,8 @@ setup(
     packages = find_packages(),
     install_requires = ["tk",
                         "desktop-notifier",
-                        "exaroton"],
+                        "exaroton",
+                        "tkthread"],
     python_requires = ">=3.6",
     entry_points = {"main": ["BBSWM = BBSWM.main:main"]},
     classifiers = [

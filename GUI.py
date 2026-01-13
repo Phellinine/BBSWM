@@ -1,27 +1,39 @@
 import datetime
+import threading
 import tkinter as tk
+from time import sleep
 from tkinter import ttk
 
 import nextcloud_client
-from nextcloud_client import HTTPResponseError
 
 import API
 import config
 from configs import UI_style as Cfg_style
 
-stream_options: list[tuple[str, str]] = [('Global', '[Global]'),
-                                         ('All', ''),
-                                         ("Warn", "/WARN"),
-                                         ("Error", "/ERROR")]
+stream_options: list[tuple[str, str]] = [('Global', '0'),
+                                                   ('All', '1'),
+                                                   ("Warn", "2"),
+                                                   ("Error", "3"),
+                                                   ("chats", "4"),
+                                                   ("experiment2", "5")]
+stream_params: dict[str, str] = {"": "",
+     "0": "[Global]",
+     "1": "",
+     "2": "/WARN",
+     "3": "/ERROR",
+     "4": ["[Server thread/INFO]", "issued server command", "chat",   "-[Server thread/INFO]: ", "-issued server command"],
+     "5": ["![Server",]}
+
 
 stream = API.Console([""], "[")
+global console
+global autoscroll
 
 player_log_file = datetime.date.today().isoformat() + ".json"
 player_log_path = "old/player_logs/"
 player_log_full = player_log_path + player_log_file
 NC = nextcloud_client.Client('https://gmb-cloud.wiesan.de')
 nc_path = "./Minecraft mit detti/server player logs/"
-run = True
 
 font = Cfg_style.font
 
@@ -36,21 +48,27 @@ foreground_hover = Cfg_style.foreground_hover
 foreground_disabled = Cfg_style.foreground_disabled
 
 
-def usr_quit(window: tk.Tk) -> None:
+
+def triger_update(stop_event: threading.Event) -> None:
+    while not stop_event.is_set():
+        update_stream()
+        sleep(10)
+
+
+def usr_quit(window: tk.Toplevel) -> None:
     """
     quit the window
     :param window: main window which will be destroyed
     :return: None
     """
-    global run
-    try:
-        NC.login("72361402", "mbJHD-c3WEM-3LAQC-LJTzi-F3WWf")
-        if player_log_file in [ds.name for ds in NC.list(path=nc_path, properties="path")]:
-            print("hii")
-    except HTTPResponseError:
-        API.Message(API.TYPE["nextcloud_error"])
-    run = False
-    window.quit()
+    #try:
+    #    NC.login("72361402", "mbJHD-c3WEM-3LAQC-LJTzi-F3WWf")
+    #    if player_log_file in [ds.name for ds in NC.list(path=nc_path, properties="path")]:
+    #        print("hii")
+    #except HTTPResponseError:
+    #    API.Message(API.TYPE["nextcloud_error"])
+    window.destroy()
+    return
 
 
 def get_stream() -> str:
@@ -66,13 +84,13 @@ def get_stream() -> str:
     return out
 
 
-def update_stream(console: tk.Text, autoscroll: tk.Variable) -> None:
+def update_stream() -> None:
     """
     takes a tkinter text object and appends new stream output
-    :param console: tkinter text object where the stream is displayed
-    :param autoscroll: tkinter variable with bool if the window should scroll to the most recent stream output
     :return: None
     """
+    global autoscroll
+    global console
     try:
         console['state'] = 'normal'
         console.insert(tk.END, get_stream())
@@ -89,28 +107,28 @@ def update_stream(console: tk.Text, autoscroll: tk.Variable) -> None:
         console['state'] = 'disabled'
 
 
-def force_update_stream(selected: tk.Variable, console: tk.Text, autoscroll: tk.Variable) -> None:
+def force_update_stream(selected: tk.Variable) -> None:
     """
     takes a tkinter text object and replaces its content with the wanted stream, thereby force updating it
     :param selected: tkinter variable with the selected stream filtering parameter
-    :param console: tkinter text object where the stream is displayed
-    :param autoscroll: tkinter variable with bool if the window should scroll to the most recent stream output
     :return: None
     """
     global stream
     console['state'] = 'normal'
     console.delete('1.0', tk.END)
     console['state'] = 'disabled'
-    stream = API.Console([""], selected.get())
-    update_stream(console, autoscroll)
+    stream = API.Console([""], stream_params[selected.get()])
+    update_stream()
 
 
-def build(window: tk.Tk):
+def build(window: tk.Toplevel) -> None:
     """
     create a window showing the current output of the server stream
     :param window:
-    :return:
+    :return: None
     """
+    global console
+    global autoscroll
     x = '1000'
     y = '500'
     space_x = "-1000"
@@ -119,8 +137,8 @@ def build(window: tk.Tk):
     # specify window
     window.title("BBSWM -- Start")  # -B-lock für -B-lock -S-erver -W-ork -M-anager
     window.geometry(x + 'x' + y + space_x + space_y)
-
     autoscroll = tk.Variable(value="1")
+
 
 
 
@@ -138,13 +156,11 @@ def build(window: tk.Tk):
     left_frame = ttk.Frame(main_frame)
     left_frame.pack(side="left", fill="both", expand=False, pady=10, padx=10)
 
-    ttk.Label(left_frame, text="Streams").pack(pady=20)
-
     radio_frame = ttk.Labelframe(left_frame, text=" Radio ")
     radio_frame.pack(ipady=5, fill="x")
 
     # create radio buttons for streams
-    selected_stream = tk.StringVar()
+    selected_stream = tk.Variable()
     for option in stream_options:
         r = ttk.Radiobutton(
             radio_frame,
@@ -155,8 +171,7 @@ def build(window: tk.Tk):
         r.pack(fill='x', padx=10, pady=5)
 
     # create update button
-    ttk.Button(left_frame, text="Update", command=lambda: force_update_stream(selected_stream, console,
-                                                                              autoscroll)).pack(pady=20)
+    ttk.Button(left_frame, text="Update", command=lambda: force_update_stream(selected_stream)).pack(pady=20)
     # create auto scroll button
     ttk.Checkbutton(
         left_frame,
@@ -182,4 +197,4 @@ def build(window: tk.Tk):
     console.pack(expand=True, fill="both")
     v_scrollbar.config(command=console.yview)
 
-    force_update_stream(selected_stream, console, autoscroll)
+    force_update_stream(selected_stream)

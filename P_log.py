@@ -68,7 +68,7 @@ def quick_choose(window) -> None:
         build(path_logs + selection, window)
 
     # create window with files listed
-    toplevel = tk.Toplevel(window)
+    toplevel = tk.Toplevel(window, name="quick choose")
     frame = ttk.Frame(toplevel)
     label = ttk.Label(frame, text="Choose File")
     label.pack(anchor="n", padx=10, pady=10)
@@ -104,20 +104,19 @@ def delete_current_file(file: str, window: tk.Toplevel | tk.Tk) -> None:
     :param window: toplevel to destroy
     :return: None
     """
-
     if messagebox.askokcancel(
             "Delete File?", "Want to delete the current file?", detail="this cant be undonne"):
         print("hi")
         print(file)
         os.remove(file)
-        if type(window) == tk.Toplevel:
+        if window.title == "quick choose":
             dest = window
             window = window.master
             dest.destroy()
         quick_choose(window)
 
 
-def build(file: str, window: tk.Tk) -> None:
+def build(file: str, window: tk.Toplevel) -> None:
     """
     Creates a new frame in an empty window.
     In this frame creates a view for a player log file.
