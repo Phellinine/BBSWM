@@ -65,6 +65,11 @@ def build():
     def quit_function():
         API.close_server()
         desktop_message.simple("BBSWM", "server sucessfully shut down")
+
+        tk_instance.destroy()
+        stop.set()
+
+    def debugging_quit():
         tk_instance.destroy()
         stop.set()
 
@@ -81,10 +86,12 @@ def build():
     p_log = ttk.Button(main_frame, text="Player Log", command=create_p_log)
     gui = ttk.Button(main_frame, text="GUI", command=create_gui)
     quit_btn = ttk.Button(main_frame, text="Quit", command=quit_function)
+    quit_deb_btn = ttk.Button(main_frame, text="Quit(unsafe, only for testing)", command=debugging_quit)
 
     main_frame.pack(expand=True, fill="both")
     p_log.pack()
     gui.pack()
     quit_btn.pack()
+    quit_deb_btn.pack()
 
     return tk_instance

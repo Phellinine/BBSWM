@@ -1,6 +1,7 @@
 import json
 import os
 import tkinter as tk
+from datetime import datetime
 from tkinter import messagebox
 from tkinter import ttk
 from typing import Any
@@ -158,19 +159,27 @@ def build(file: str, window: tk.Toplevel) -> None:
         messagebox.showerror("File Error", "The selected file does not exist", detail=f"file: {file}")
         quick_choose(window)
 
-    def get_log_data(data_path: list[str], exp_type: type = str) -> Any:
+    def get_log_data(data_path: list[str], exp_type: type = str, is_end_time: bool = False, custom_dict: dict[Any, Any] = None) -> Any:
         """
         return data from the read JSON file without crashing if expected data is missing
         :param data_path: list of strings going down the objects needed
         :param exp_type: type of data expected to be returned
-        :return: data at path location
+        :param is_end_time: boolean if the expected data is an end time
+        :param custom_dict: custom dict from which to get data, if specified
+        :return: data at path location, except no data could be found and is_end_time is set, then return current time
         """
 
-        re = py_p_log
+        if custom_dict is None:
+            re = py_p_log
+        else:
+            re = custom_dict
         for item in data_path:
             try:
                 re = re[item]
             except KeyError:
+                if is_end_time:
+                    return datetime.now().time().isoformat(timespec="seconds")
+
                 if messagebox.askretrycancel(
                         "Data Error", "The selected file does not contain the expected data",
                             detail=f"{re} does not contain {item}. Path was: {data_path}"):
@@ -187,12 +196,16 @@ def build(file: str, window: tk.Toplevel) -> None:
             return None
         return re
 
-    meta_start = get_log_data(["meta", "start time"])[0:2]
+    meta_start = get_log_data(["meta", "start time"], str)[0:2]
     meta_start = meta_start + "00"
-    meta_end = get_log_data(["meta", "end time"])[0:2]
+    meta_end = get_log_data(data_path=["meta", "end time"], exp_type=str, is_end_time=True)[0:2]
     meta_end = int(meta_end + "00") + 100
     players_dict: dict[Any, Any] = get_log_data(["players"], dict)
     num_players = len(players_dict)
+    start = int(meta_start)
+    end = int(meta_end)
+    print(meta_end)
+    print(end - start)
 
     # create navigation menu
     menubar = tk.Menu(frame, tearoff=0, font=font, foreground=foreground_sec, background=background_sec, relief="flat",
@@ -214,12 +227,12 @@ def build(file: str, window: tk.Toplevel) -> None:
     frame_up.pack(anchor="n", fill="both")
     playtimes = tk.Canvas(frame, bg=canvas_bg, yscrollcommand=v_scrollbar.set,
                           xscrollcommand=h_scrollbar.set,
-                          scrollregion=(0, 0, meta_end, num_players * conf.plog_scale_height))  # playtimes
+                          scrollregion=(0, 0, (end - start) / conf.plog_scale_width, num_players * conf.plog_scale_height))  # playtimes
     players = tk.Canvas(frame, yscrollcommand=v_scrollbar.set, bg=canvas_bg, width=150,
                         scrollregion=(0, 0, 0, num_players * conf.plog_scale_height))  # players
     title_canvas = tk.Canvas(frame_up, height=100, width=150, bg=canvas_bg)  # title
     time_canvas = tk.Canvas(frame_up, height=100, bg=canvas_bg, xscrollcommand=h_scrollbar.set,
-                            scrollregion=(0, 0, meta_end, 0))  # time marks
+                            scrollregion=(0, 0, (end - start) / conf.plog_scale_width, 0))  # time marks
 
     title_canvas.pack(anchor="w", side="left", expand=False, padx=10, pady=10)
     time_canvas.pack(anchor="e", side="right", fill="x", expand=True, padx=10, pady=10)
@@ -229,34 +242,34 @@ def build(file: str, window: tk.Toplevel) -> None:
     # create playtime and players
     num: int = 0
     player_length_coords = num_players * conf.plog_scale_height + 20
+    time_markers_end = (end - start) / conf.plog_scale_width
     for player in players_dict:
         players.create_text(10, (num * conf.plog_scale_height) + ((conf.plog_scale_height - 10) / 2 + 5), text=player,
                             justify="left", anchor="w", font=font, fill=canvas_text)
 
         for time in get_log_data(["players", player, "playtime"], list):
-            on = gettime_dec(time["on"])
-            of = gettime_dec(time["of"])
-            on: int = on - int(meta_start)
-            of: int = of - int(meta_start)
+            on: int = gettime_dec(get_log_data(data_path=["on"], exp_type=str, custom_dict=time))
+            of: int = gettime_dec(get_log_data(data_path=["of"], exp_type=str, custom_dict=time, is_end_time=True))
+            on -= start
+            of -= start
+            print(on,of)
             corner_up: tuple[float, float] = (on / conf.plog_scale_width, (conf.plog_scale_height * num) + 10)
             corner_down: tuple[float, float] = (of / conf.plog_scale_width,
                                                 (conf.plog_scale_height * num) + conf.plog_scale_height)
             playtimes.create_rectangle(corner_up, corner_down, fill=canvas_object, outline=canvas_text, width=2)
 
-        playtimes.create_line(0, conf.plog_scale_height * num + 5, player_length_coords,
+        playtimes.create_line(0, conf.plog_scale_height * num + 5, time_markers_end,
                               conf.plog_scale_height * num + 5, fill=canvas_lines, width=2)
         players.create_line(0, conf.plog_scale_height * num + 5, player_length_coords, conf.plog_scale_height * num + 5,
                             fill=canvas_lines, width=2)
         num += 1
 
-    playtimes.create_line(0, conf.plog_scale_height * num + 5, player_length_coords, conf.plog_scale_height * num + 5,
+    playtimes.create_line(0, conf.plog_scale_height * num + 5, time_markers_end, conf.plog_scale_height * num + 5,
                           fill=canvas_lines, width=2)
     players.create_line(0, conf.plog_scale_height * num + 5, player_length_coords, conf.plog_scale_height * num + 5,
                         fill=canvas_lines, width=2)
 
     # create time marks
-    start = int(meta_start)
-    end = int(meta_end)
 
     for time in range(start, end, int(conf.plog_scale_width * 30)):
         time = gettime_real(time)[0:4] + "0"

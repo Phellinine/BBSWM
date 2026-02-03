@@ -237,18 +237,18 @@ class Players:
         self.hist = player_list
         time: str = datetime.now().time().isoformat(timespec="seconds")
         try:
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
         except FileNotFoundError:
             Message(TYPE["p_log_file_missing"])
             ini.player_log()
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
 
         for player in new_players:
-            if player in json_p_log:
+            if player in json_p_log["players"]:
                 json_p_log["players"][player]["playtime"].append({'on': time})
             else:
                 json_p_log["players"][player] = {"playtime": [{'on': time}]}
@@ -262,34 +262,43 @@ class Players:
 
     def close_log(self):
         try:
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
         except FileNotFoundError:
             Message(TYPE["p_log_file_missing"])
             ini.player_log()
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
         time: str = datetime.now().time().isoformat(timespec="seconds")
-        gone_players = [player for player in self.hist if player not in [""]]
+        gone_players = [player for player in self.hist]
         for player in gone_players:
             json_p_log["players"][player]["playtime"][-1]["of"] = time
+
+        json_p_log["meta"]["end time"] = time
         with open(conf.player_log_full, "w") as file:
             json.dump(json_p_log, file, indent=2)
             file.close()
 
 def close_server() -> None:
-    if EXA.get_server(ID).status == "Offline":
-        return
+    def branch_if_stopped() -> bool:
+        if EXA.get_server(ID).status == "Offline":
+            return True
+        else:
+            return False
+
+    if branch_if_stopped(): return
     #statii = ('0: "Offline", 1: "Online", 2: "Starting", 3: "Stopping", 4: "Restarting", 5: "Saving", 6: "Loading", '
     #          '7: "Crashed", 8: "Pending", 10: "Preparing",')
     EXA.command(ID, 'title @a subtitle {"text":"Server wird in 5 min gestoppt","color":"red"}')
     EXA.command(ID, 'title @a title {"text":"Server Stopp","color":"dark_red"}')
     sleep(60*3)
+    if branch_if_stopped(): return
     EXA.command(ID, 'title @a subtitle {"text":"Server wird in 2 min gestoppt","color":"red"}')
     EXA.command(ID, 'title @a title {"text":".","color":"dark_red"}')
     sleep(60*2)
+    if branch_if_stopped(): return
     EXA.command(ID, 'kick @a Der Server wurde gestoppt')
     EXA.stop(ID)
     server_done = False
