@@ -1,42 +1,46 @@
 #!/usr/bin/env python3
-import json
-from datetime import datetime
-from time import sleep
+import threading
 
 import API
-import GUI
-import config as conf
 import desktop_message
+import main_window
 
 api_p_log = API.Players([])
+threads: list[threading.Thread] = []
+stop: threading.Event = threading.Event()
 
-def loop_main(interval: int, update_ratio: int) -> None:
-    GUI.update_stream()
-    api_p_log.update_log()
-    for i in range(update_ratio):
-        GUI.root.update()
-        sleep(interval / update_ratio)
-        if not GUI.run:
-            return None
-    return None
+
+def thread_add(func, *args, **kwargs):
+    global threads
+    thr = threading.Thread(target=func, args=args, kwargs=kwargs)
+    threads.append(thr)
+
+def run_threads():
+    global threads
+    for thread in threads:
+        thread.start()
+    desktop_message.simple("BBSWM", "started all threads")
+
+def add_single_thread(func, *args, **kwargs):
+    global threads
+    threading.Thread(target=func, args=args, kwargs=kwargs).start()
+    threads.append(threading.Thread(target=func, args=args, kwargs=kwargs))
 
 
 if __name__ == '__main__':
-    desktop_message.simple("BBSWM", "Starting BBSWM")
-    API.Message(API.TYPE["start"])
-    API.Players.update_log(api_p_log)
-    while GUI.run:
-        loop_main(10, 600)
+    desktop_message.simple("BBSWM", "Started BBSWM")
 
-    try:
-        open(conf.player_log_full, "x")
-    except FileExistsError:
-        with open(conf.player_log_full) as f:
-            end = json.load(f)
-            end["meta"]["end time"] = datetime.now().time().isoformat(timespec="seconds")
-            json.dump(end, open(conf.player_log_full, "w"), indent=2)
-            f.close()
-    API.Players.close_log(api_p_log)
+    main_window = main_window.build()
+    thread_add(API.player_log_updater, stop)
+
+    # Start each thread after 1 second
+    main_window.after(1000, run_threads)
+    main_window.mainloop()
+
+    stop.set()
+
+    # Wait for all threads to finish
+    for t in threads:
+        t.join()
 
     desktop_message.simple("BBSWM", "Closed BBSWM")
-    API.Message(API.TYPE["quit"])

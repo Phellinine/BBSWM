@@ -13,7 +13,7 @@ log_full = log_path + log_file
 NC = nextcloud_client.Client('https://gmb-cloud.wiesan.de')
 nc_path = "./Minecraft mit Dettweiler/server player logs"
 
-plog_scale_width = 0.5
+plog_scale_width = 0.1
 plog_scale_height = 50
 
 icon_path = './assets/BBSWM_icon.png'

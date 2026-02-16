@@ -1,11 +1,15 @@
 import json
 import traceback
 from datetime import datetime
+from threading import Event
+from time import sleep
 from typing import Any
-from old import init as ini
+
 from exaroton import Exaroton
 
 import config as conf
+import desktop_message
+from old import init as ini
 
 KONRAD = 'MqbPYYh0gMWq8sHfoqw4Y3pJywXAdJDFqFw4z19Eg4QrDyhBSct9G0liZGLqAhRyae4pfsvgmwYQnr6GteOj0FGjevKXWb4umGFf'
 TIM = 'OX6O2OIbazgx1osCvhPQ3hkXq3TbddN0hEc08zKf9jk4mxNDb3bJV8yEwOUCAWKRCLABYwCP5kYiPy1LJc9sxNjPvGNCC9haISdA'
@@ -164,7 +168,7 @@ class Message:
 
 
 class Console:
-    def __init__(self, hist: list[str], arg: str) -> None:
+    def __init__(self, hist: list[str], arg: str | list[str]) -> None:
 
         self.hist = hist
         self.arg = arg
@@ -182,10 +186,32 @@ class Console:
             raise ConnectionError
 
         filtered = []
-        for line in console:
-            if self.arg in line[:50]:  # check for keyword
-                filtered.append(line)
-        return filtered
+        if type(self.arg) == list:
+            # - + !
+            filtered = console
+            for action in self.arg:
+                if action[:1] == "-":
+                    replaced: list[str] = []
+                    for line in filtered:
+                        replaced.append(line.replace(action[1:], "", 1))
+                    filtered = replaced
+
+                elif action[:1] == "+":
+                    pass
+
+                elif action[:1] == "!":
+                    filtered = [line for line in filtered if action[1:] not in line]
+
+                else:
+                    filtered = [line for line in filtered if action in line]
+
+            return filtered
+
+        else:
+            for line in console:
+                if self.arg in line[:50]:  # check for keyword
+                    filtered.append(line)
+            return filtered
 
     def get(self):
         return self.console_part()  # get the new part of the console
@@ -211,18 +237,18 @@ class Players:
         self.hist = player_list
         time: str = datetime.now().time().isoformat(timespec="seconds")
         try:
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
         except FileNotFoundError:
             Message(TYPE["p_log_file_missing"])
             ini.player_log()
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
 
         for player in new_players:
-            if player in json_p_log:
+            if player in json_p_log["players"]:
                 json_p_log["players"][player]["playtime"].append({'on': time})
             else:
                 json_p_log["players"][player] = {"playtime": [{'on': time}]}
@@ -236,19 +262,70 @@ class Players:
 
     def close_log(self):
         try:
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
         except FileNotFoundError:
             Message(TYPE["p_log_file_missing"])
             ini.player_log()
-            with open(conf.player_log_full, mode="r", encoding="utf-8") as file:
+            with open(conf.player_log_full, mode="r") as file:
                 json_p_log: dict[str, Any] = json.load(file)
                 file.close()
         time: str = datetime.now().time().isoformat(timespec="seconds")
-        gone_players = [player for player in self.hist if player not in [""]]
+        gone_players = [player for player in self.hist]
         for player in gone_players:
             json_p_log["players"][player]["playtime"][-1]["of"] = time
+
+        json_p_log["meta"]["end time"] = time
         with open(conf.player_log_full, "w") as file:
             json.dump(json_p_log, file, indent=2)
             file.close()
+
+def close_server() -> None:
+    def branch_if_stopped() -> bool:
+        if EXA.get_server(ID).status == "Offline":
+            return True
+        else:
+            return False
+
+    if branch_if_stopped(): return
+    #statii = ('0: "Offline", 1: "Online", 2: "Starting", 3: "Stopping", 4: "Restarting", 5: "Saving", 6: "Loading", '
+    #          '7: "Crashed", 8: "Pending", 10: "Preparing",')
+    EXA.command(ID, 'title @a subtitle {"text":"Server wird in 5 min gestoppt","color":"red"}')
+    EXA.command(ID, 'title @a title {"text":"Server Stopp","color":"dark_red"}')
+    sleep(60*3)
+    if branch_if_stopped(): return
+    EXA.command(ID, 'title @a subtitle {"text":"Server wird in 2 min gestoppt","color":"red"}')
+    EXA.command(ID, 'title @a title {"text":".","color":"dark_red"}')
+    sleep(60*2)
+    if branch_if_stopped(): return
+    EXA.command(ID, 'kick @a Der Server wurde gestoppt')
+    EXA.stop(ID)
+    server_done = False
+    while not server_done:
+        sleep(5)
+        status = EXA.get_server(ID).status
+        if status == "Offline":
+            server_done = True
+        elif status == "Online":
+            EXA.stop(ID)
+        else:
+            pass
+        sleep(5)
+
+    return
+
+def player_log_updater(stop_event: Event) -> None:
+    players = Players([])
+    retry = 0
+    max_retrys = 5
+    while not stop_event.is_set():
+        try:
+            EXA.command(ID, 'player log')
+        except ConnectionError:
+            retry += 1
+        players.update_log()
+        sleep(10)
+
+    players.close_log()
+    desktop_message.simple("BBSWM", "closed player log")
