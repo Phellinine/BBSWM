@@ -5,12 +5,13 @@ from tkinter import ttk
 import API
 import GUI
 import P_log
+from tk_windows import first_start
 import config as conf
 import desktop_message
 from configs import UI_style as Cfg_style
 
 
-def build():
+def build(first_startup: bool = False):
     font = Cfg_style.font
 
     background = Cfg_style.background
@@ -21,17 +22,17 @@ def build():
     foreground = Cfg_style.foreground
     foreground_sec = Cfg_style.foreground
     foreground_hover = Cfg_style.foreground_hover
-    # foreground_disabled = Cfg_style.foreground_disabled
+    foreground_disabled = Cfg_style.foreground_disabled
 
     tk_instance = tk.Tk()
     stop = threading.Event()
 
     style = ttk.Style(tk_instance)
 
-    style.map("TButton", background=[("active", background_hover), ("pressed", "#ffffff")],
-              foreground=[("active", foreground_hover), ("pressed", "#ffffff")], )
     style.configure(style="TButton", relief="flat", background=background, font=Cfg_style.btns["font"],
                     foreground=foreground)
+    style.map("TButton", background=[("active", background_hover), ("pressed", "#ffffff"), ("disabled", background_disabled)],
+              foreground=[("active", foreground_hover), ("pressed", "#ffffff"), ("disabled", foreground_disabled)])
 
     style.configure("TLabel", background=background, foreground=foreground, font=font)
 
@@ -40,19 +41,22 @@ def build():
     style.configure("TScrollbar", background=background_sec, foreground=foreground, relief="flat")
     style.map("TScrollbar", background=[("active", background_hover), ("disabled", background_disabled)])
 
-    style.map("TRadiobutton", background=[("active", background_hover), ("pressed", "#ffffff")],
-              foreground=[("active", foreground_hover), ("pressed", "#ffffff")])
     style.configure("TRadiobutton", background=background_sec, foreground=foreground, font=font, borderwidth=0,
                     padding=2)
-
-    style.map("TCheckbutton", background=[("active", background_hover), ("pressed", "#ffffff")],
+    style.map("TRadiobutton", background=[("active", background_hover), ("pressed", "#ffffff")],
               foreground=[("active", foreground_hover), ("pressed", "#ffffff")])
+
     style.configure("TCheckbutton", background=background_sec, foreground=foreground, font=font, borderwidth=0,
                     padding=2)
+    style.map("TCheckbutton", background=[("active", background_hover), ("pressed", "#ffffff")],
+              foreground=[("active", foreground_hover), ("pressed", "#ffffff")])
 
     style.configure("TLabelframe", background=background, foreground=foreground, labelmargins=5, borderwidth=2,
                     bordercolor=foreground_sec)
+
     style.configure("TLabelframe.Label", font=font, background=background, foreground=foreground)
+
+    style.configure("TEntry", font=font, background=background, foreground=foreground, relief="flat")
 
     def create_p_log():
         P_log.build(file=conf.player_log_full, window=tk.Toplevel(tk_instance))
@@ -61,6 +65,8 @@ def build():
         GUI.build(window=tk.Toplevel(tk_instance))
         threading.Thread(target=GUI.triger_update, args=(stop,)).start()
 
+    def startup_window():
+        first_start.build(window=tk_instance)
 
     def quit_function():
         API.close_server()
@@ -79,6 +85,12 @@ def build():
     space_x = "-1000"
     space_y = "+100"
 
+    if first_startup:
+        tk_instance.title("BBSWM -- Welcome!")  # -B-lock für -B-lock -S-erver -W-ork -M-anager
+        tk_instance.geometry('800' + 'x' + '700' + space_x + space_y)
+        startup_window()
+        return None
+
     tk_instance.title("BBSWM -- Choose Window")  # -B-lock für -B-lock -S-erver -W-ork -M-anager
     tk_instance.geometry(x + 'x' + y + space_x + space_y)
 
@@ -95,3 +107,6 @@ def build():
     quit_deb_btn.pack()
 
     return tk_instance
+
+if __name__ == "__main__":
+    build(True)

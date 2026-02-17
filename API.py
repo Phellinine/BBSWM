@@ -10,11 +10,12 @@ from exaroton import Exaroton
 import config as conf
 import desktop_message
 from old import init as ini
+from configs import settings as settings
 
-KONRAD = 'MqbPYYh0gMWq8sHfoqw4Y3pJywXAdJDFqFw4z19Eg4QrDyhBSct9G0liZGLqAhRyae4pfsvgmwYQnr6GteOj0FGjevKXWb4umGFf'
-TIM = 'OX6O2OIbazgx1osCvhPQ3hkXq3TbddN0hEc08zKf9jk4mxNDb3bJV8yEwOUCAWKRCLABYwCP5kYiPy1LJc9sxNjPvGNCC9haISdA'
-EXA = Exaroton(KONRAD)
-ID = 'EOYAPIIA3FHJf2I8'
+exaroton_api_token = settings.get_val(["exaroton", "api_token"])
+EXA = Exaroton(exaroton_api_token)
+SERVER_ID = settings.get_val(["exaroton", "server_id"])
+print(SERVER_ID, exaroton_api_token)
 
 
 class Mitype:
@@ -178,10 +179,13 @@ class Console:
 
     def console_part(self) -> list[str]:
         try:
-            console = (EXA.get_server_logs(ID))  # get server logs
+            console = (EXA.get_server_logs(SERVER_ID))  # get server logs
             console = console.splitlines()
             console = [item for item in console if item not in self.hist]  # remove history from console
-        except (TypeError, AttributeError):
+        except TypeError:
+            Message(TYPE["server_response"])
+            console = [""]
+        except AttributeError:
             Message(TYPE["server_response"])
             raise ConnectionError
 
@@ -218,7 +222,7 @@ class Console:
 
     def update_hist(self) -> None:
         try:
-            hist = EXA.get_server_logs(ID).splitlines()
+            hist = EXA.get_server_logs(SERVER_ID).splitlines()
         except (TypeError, AttributeError):
             Message(TYPE["server_response"])
             raise ConnectionError
@@ -231,7 +235,7 @@ class Players:
         self.hist = hist
 
     def update_log(self):
-        player_list = EXA.get_server(ID).players.list
+        player_list = EXA.get_server(SERVER_ID).players.list
         new_players = [player for player in player_list if player not in self.hist]
         gone_players = [player for player in self.hist if player not in player_list]
         self.hist = player_list
@@ -283,7 +287,7 @@ class Players:
 
 def close_server() -> None:
     def branch_if_stopped() -> bool:
-        if EXA.get_server(ID).status == "Offline":
+        if EXA.get_server(SERVER_ID).status == "Offline":
             return True
         else:
             return False
@@ -291,24 +295,24 @@ def close_server() -> None:
     if branch_if_stopped(): return
     #statii = ('0: "Offline", 1: "Online", 2: "Starting", 3: "Stopping", 4: "Restarting", 5: "Saving", 6: "Loading", '
     #          '7: "Crashed", 8: "Pending", 10: "Preparing",')
-    EXA.command(ID, 'title @a subtitle {"text":"Server wird in 5 min gestoppt","color":"red"}')
-    EXA.command(ID, 'title @a title {"text":"Server Stopp","color":"dark_red"}')
+    EXA.command(SERVER_ID, 'title @a subtitle {"text":"Server wird in 5 min gestoppt","color":"red"}')
+    EXA.command(SERVER_ID, 'title @a title {"text":"Server Stopp","color":"dark_red"}')
     sleep(60*3)
     if branch_if_stopped(): return
-    EXA.command(ID, 'title @a subtitle {"text":"Server wird in 2 min gestoppt","color":"red"}')
-    EXA.command(ID, 'title @a title {"text":".","color":"dark_red"}')
+    EXA.command(SERVER_ID, 'title @a subtitle {"text":"Server wird in 2 min gestoppt","color":"red"}')
+    EXA.command(SERVER_ID, 'title @a title {"text":".","color":"dark_red"}')
     sleep(60*2)
     if branch_if_stopped(): return
-    EXA.command(ID, 'kick @a Der Server wurde gestoppt')
-    EXA.stop(ID)
+    EXA.command(SERVER_ID, 'kick @a Der Server wurde gestoppt')
+    EXA.stop(SERVER_ID)
     server_done = False
     while not server_done:
         sleep(5)
-        status = EXA.get_server(ID).status
+        status = EXA.get_server(SERVER_ID).status
         if status == "Offline":
             server_done = True
         elif status == "Online":
-            EXA.stop(ID)
+            EXA.stop(SERVER_ID)
         else:
             pass
         sleep(5)
@@ -321,7 +325,7 @@ def player_log_updater(stop_event: Event) -> None:
     max_retrys = 5
     while not stop_event.is_set():
         try:
-            EXA.command(ID, 'player log')
+            EXA.command(SERVER_ID, 'player log')
         except ConnectionError:
             retry += 1
         players.update_log()

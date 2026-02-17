@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import threading
 
+import settings
 import API
 import desktop_message
 import main_window
@@ -28,6 +29,8 @@ def add_single_thread(func, *args, **kwargs):
 
 
 if __name__ == '__main__':
+    if settings.detect_first_launch("0.1"):
+        main_window.build(True)
     desktop_message.simple("BBSWM", "Started BBSWM")
 
     main_window = main_window.build()
